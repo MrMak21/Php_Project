@@ -1,3 +1,7 @@
+<?php
+session_start();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,7 +56,14 @@ function authenticateUser($email,$password) {
             $user = $stmt->fetch();
 
             if (!empty($user)) {
+                $_SESSION['userEmail'] = $user['Email'];
+                $_SESSION['userId'] = $user['UserId'];
                 echo 'Succesfull login user: ' . $user['Firstname'] . ' ' . $user['Lastname'];
+                if ($user['UserTypeId'] == 1) {
+                    header("Location:adminDashboard.php");
+                }elseif ($user['UserTypeId'] == 3) {
+                    header("Location:customerDashboard.php");
+                }
             } else {
                 echo 'Wrong credentials';
             }

@@ -26,18 +26,22 @@ session_start();
     <br>
     <br>
     <label for="date">Date:</label>
-    <input type="date" name="date">
+    <input type="date" name="date" value="<?php echo $_POST['date'];?>">
     <br>
 
     <label for="time">Time:</label>
-    <input type="time" id="time" name="time">
+    <input type="time" id="time" name="time" value="<?php echo $_POST['time'];?>">
+    &nbsp;
+    <input type="submit" name="checkTime" value="Check">
+    &nbsp;
+    <p>Please check time before fill in the fields</p>
     <br>
     <br>
     <label for="people">Number of people:</label>
-    <input type="number" name="people">
+    <input type="number" name="people" value="<?php echo $_POST['people'];?>">
     <br>
 
-    <input type="submit" value="Reserve">
+    <input type="submit" name="submit" value="Reserve">
 
 </form>
 
@@ -51,7 +55,10 @@ if (!isset($_SESSION['userId'])) {
     header("Location:login.php");
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if (isset($_POST['checkTime'])) {
+    checkTime();
+
+} else if (isset($_POST['submit']) ) {
     $date = $_POST['date'];
     $time = $_POST['time'];
     $people = $_POST['people'];
@@ -61,6 +68,120 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     makeReservation($dateTime,$people,$selectedUserId);
 
+}
+
+function checkTime() {
+
+    $checkTime = $_POST['time'];
+    $checkDate = $_POST['date'];
+    $tables = getSumTables();
+    $seats = getSeats();
+
+    $ftimestamp = strtotime($checkTime) + 60*60*2;
+    $ptimestamp = strtotime($checkTime) - 60*60*2;
+
+    $forwardTime = date('H:i',$ftimestamp);
+    $previousTime = date('H:i',$ptimestamp);
+    $dayName = date("l",strtotime($checkDate));
+
+    $sql = "SELECT COUNT(*) as `total` FROM `Reservation` WHERE (Reservation.Date >= '" . $checkDate . " " . $previousTime . ":00')" . " and (Reservation.Date <= '" . $checkDate . " " . $forwardTime .":00')";
+
+    $avalaibleTables = getAvailableTables($sql);
+
+
+    if (checkWorkingDay($dayName) == 1) {
+        echo "We have " . ($tables - $avalaibleTables) . " tables (x" . $seats . " person) available for " . $dayName . " " . $checkDate . " at  " . $checkTime;
+    } else {
+        echo "We don't work on " . $dayName . "s. Please try another day";
+    }
+
+
+
+}
+
+function checkWorkingDay($day) {
+    $sql = "Select $day from Config";
+    $res = 0;
+
+    try {
+        require 'DbConnect.php';
+
+        if (!empty($conn)) {
+            $data = $conn->query($sql)->fetchAll();
+            foreach ($data as $row) {
+                $res = $row[$day];
+
+            }
+
+        }
+    }catch (PDOException $e) {
+        echo $e->getMessage();
+    }
+    return $res;
+
+}
+
+
+function getAvailableTables($sql) {
+
+    $total = 0;
+    try {
+        require 'DbConnect.php';
+
+        if (!empty($conn)) {
+            $data = $conn->query($sql)->fetchAll();
+            foreach ($data as $row) {
+                $total = $row['total'];
+            }
+
+        }
+    }catch (PDOException $e) {
+        echo $e->getMessage();
+    }
+
+    return $total;
+}
+
+function getSumTables() {
+    $tables = 0;
+    try {
+        require 'DbConnect.php';
+        $sql = "SELECT * FROM Config";
+
+        if (!empty($conn)) {
+            $data = $conn->query($sql)->fetchAll();
+
+            foreach ($data as $row) {
+                $tables =  $row['NumOfTables'];
+            }
+
+        }
+    }catch (PDOException $e) {
+        echo $e->getMessage();
+    }
+
+    return $tables;
+}
+
+function getSeats() {
+    $seats = 0;
+    try {
+        require 'DbConnect.php';
+        $sql = "SELECT * FROM Config";
+
+        if (!empty($conn)) {
+            $data = $conn->query($sql)->fetchAll();
+
+            foreach ($data as $row) {
+                $seats =  $row['TableSeats'];
+            }
+
+        }
+    }catch (PDOException $e) {
+        echo $e->getMessage();
+    }
+
+    return $seats;
 }
 
 function makeReservation($date,$people,$selectedUserId) {

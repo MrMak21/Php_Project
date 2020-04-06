@@ -75,6 +75,9 @@ function authenticateUser($email,$password) {
             if (!empty($user)) {
                 $_SESSION['userEmail'] = $user['Email'];
                 $_SESSION['userId'] = $user['UserId'];
+                $_SESSION['loggedIn'] = true;
+                $_SESSION['userType'] = $user['UserTypeId'];
+
                 echo 'Succesfull login user: ' . $user['Firstname'] . ' ' . $user['Lastname'];
                 if ($user['UserTypeId'] == 1) {
                     header("Location:adminDashboard.php");

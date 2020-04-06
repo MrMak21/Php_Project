@@ -14,10 +14,29 @@ session_start();
 
 <form action="<?php htmlspecialchars($_SERVER["PHP_SELF"]);?>" method="post">
 
-    Date:<br>
-    <input type="datetime-local" name="date"><br>
-    Number of people:<br>
-    <input type="number" name="people"><br>
+    <label for="customer">Customer:</label>
+    <select name="customer" size="1">
+        <?php
+            fillCustomerList();
+        ?>
+
+    </select>
+
+
+    <br>
+    <br>
+    <label for="date">Date:</label>
+    <input type="date" name="date">
+    <br>
+
+    <label for="time">Time:</label>
+    <input type="time" id="time" name="time">
+    <br>
+    <br>
+    <label for="people">Number of people:</label>
+    <input type="number" name="people">
+    <br>
+
     <input type="submit" value="Reserve">
 
 </form>
@@ -28,22 +47,54 @@ session_start();
 
 <?php
 
+if (!isset($_SESSION['userId'])) {
+    header("Location:login.php");
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $date = $_POST['date'];
+    $time = $_POST['time'];
     $people = $_POST['people'];
+    $selectedUserId = $_POST['customer'];
 
-    makeReservation($date,$people);
+    $dateTime = $date . " " . $time . ":00";
+
+    makeReservation($dateTime,$people,$selectedUserId);
 
 }
 
-function makeReservation($date,$people) {
+function makeReservation($date,$people,$selectedUserId) {
     try {
         require 'DbConnect.php';
+        $userType = $_SESSION['userType'];
         $userId = $_SESSION['userId'];
-        $sql = "INSERT INTO `Reservation` (`ReservationId`, `TableNo`, `Date`, `NumOfPeople`, `UserId`, `AdminId`) VALUES (NULL, '1', '$date', '$people', '$userId', NULL);";
+
+        if ($userType == 1) {
+            $sql = "INSERT INTO `Reservation` (`ReservationId`, `TableNo`, `Date`, `NumOfPeople`, `UserId`, `AdminId`) VALUES (NULL, '1', '$date', '$people', '$selectedUserId', '$userId');";
+        } else {
+            $sql = "INSERT INTO `Reservation` (`ReservationId`, `TableNo`, `Date`, `NumOfPeople`, `UserId`, `AdminId`) VALUES (NULL, '1', '$date', '$people', '$selectedUserId', NULL);";
+        }
         if (!empty($conn)) {
             $conn->exec($sql);
             header("Location:adminDashboard.php");
+        }
+    }catch (PDOException $e) {
+        echo $e->getMessage();
+    }
+}
+
+function fillCustomerList() {
+    try {
+        require 'DbConnect.php';
+        $sql = "SELECT * FROM Users";
+
+        if (!empty($conn)) {
+            $data = $conn->query($sql)->fetchAll();
+
+            foreach ($data as $row) {
+                echo "<option value='" . $row['UserId'] . "'>" . $row['Firstname'] . " " . $row['Lastname'] . " (" . $row['Email'] . ")" .  "</option>";
+            }
+
         }
     }catch (PDOException $e) {
         echo $e->getMessage();

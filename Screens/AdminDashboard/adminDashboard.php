@@ -16,8 +16,8 @@ try {
     $saturday = 0;
     $sunday  = 0;
 
-    $openHour = "13:25";
-    $closeHour = "13:16";
+    $openHour = "";
+    $closeHour = "";
 
     $tables = 0;
     $seats = 0;
@@ -52,8 +52,20 @@ try {
     echo $e->getMessage();
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+//if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+//    changeConfigs();
+//}
+
+if (isset($_POST['submit'])) {
     changeConfigs();
+} else if (isset($_POST['logout'])) {
+    doLogout();
+}
+
+function doLogout() {
+    session_destroy();
+    header("Location:login.php");
+    exit();
 }
 
 function changeConfigs() {
@@ -198,9 +210,14 @@ function changeConfigs() {
     <input type="time" name="close" value="<?php echo $closeHour?>">
     <br>
 
-    <input type="submit" value="Change">
+    <input type="submit" name="submit" value="Change">
+
+    <br>
+    <br>
+    <input type="submit" class="button" name="logout" value="logout" />
 
 </form>
+
 
 </body>
 </html>

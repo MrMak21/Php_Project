@@ -1,30 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Register User</title>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="../../../../favicon.ico">
+
+        <title>Login</title>
+
+        <!-- Bootstrap core CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+        <!-- Custom styles for this template -->
+        <link href="signin.css" rel="stylesheet">
+    </head>
 </head>
 <body>
 
 <form action="<?php htmlspecialchars($_SERVER["PHP_SELF"]);?>" method="post">
-    First name:<br>
-    <input type="text" name="firstname"><br>
-    Last name:<br>
-    <input type="text" name="lastname"><br>
-    Email:<br>
-    <input type="email" name="email"><br>
-    Password:<br>
-    <input type="password" name="password"><br>
-    Retype Password:<br>
-    <input type="password" name="password2"><br>
-    <input type="radio" name="userType" value="1" checked> Admin
-    <input type="radio" name="userType" value="3"> Customer<br>
-    <input type="submit" value="Register">
+
+    <div class="form-group">
+        <label for="firstname">Firstname:</label>
+        <input type="text" name="firstname" class="form-control" value="<?php echo $_POST['firstname']; ?>">
+    </div>
+
+    <div class="form-group">
+        <label for="lastname">Lastname:</label>
+        <input type="text" name="lastname" class="form-control" value="<?php echo $_POST['lastname']; ?>">
+    </div>
+
+
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" name="email" class="form-control" value="<?php echo $_POST['email']; ?>">
+    </div>
+
+
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" name="password" class="form-control">
+    </div>
+
+    <div class="form-group">
+        <label for="password2">Re-type password:</label>
+        <input type="password" name="password2" class="form-control">
+    </div>
+
+    <div class="form-group">
+        <input type="radio" name="userType" value="1" class="form-control" checked> Admin
+    </div>
+
+    <div class="form-group">
+        <input type="radio" name="userType" value="3" class="form-control"> Customer
+    </div>
+
+    <div class="form-group">
+        <input type="submit" name="register" class="btn btn-primary" value="Register">
+    </div>
+
+
 
 </form>
 
 </body>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </html>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register User</title>
+</head>
+<body>
 
 
 

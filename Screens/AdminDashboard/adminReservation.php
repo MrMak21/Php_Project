@@ -19,9 +19,69 @@ if (isset($_POST['checkTime'])) {
 
     $dateTime = $date . " " . $time . ":00";
 
-    makeReservation($dateTime, $people, $selectedUserId);
-
+//    makeReservation($dateTime, $people, $selectedUserId);
+    validateReservetion();
 }
+
+function validateReservetion()
+{
+
+    try {
+        $rTime = $_POST['time'];
+        $rDate = $_POST['date'];
+        $rPeople = $_POST['people'];
+        $totalTables = getSumTables();
+        $totalSeats = getSeats();
+        $selectedUserId = $_POST['customer'];
+
+
+
+        $rAskingTables = getAskingTablesNum($rPeople, $totalSeats);
+
+        $ftimestamp = strtotime($rTime) + 60 * 60 * 2;
+        $ptimestamp = strtotime($rTime) - 60 * 60 * 2;
+
+        $forwardTime = date('H:i', $ftimestamp);
+        $previousTime = date('H:i', $ptimestamp);
+        $dayName = date("l", strtotime($rDate));
+
+        $availableTablesSql = "SELECT COUNT(*) as `total` FROM `Reservation` WHERE (Reservation.Date >= '" . $rDate . " " . $previousTime . ":00')" . " and (Reservation.Date <= '" . $rDate . " " . $forwardTime . ":00')";
+
+        $reservedTables = getAvailableTables($availableTablesSql);
+        $avalaibleTables = $totalTables - $reservedTables;
+
+        $isWorkingDate = checkWorkingDay($dayName);
+
+
+        $msg = "";
+        if ($isWorkingDate == 1) {
+            if ($avalaibleTables > $rAskingTables) {
+                //Do the reservation
+                $dateTime = $rDate . " " . $rTime . ":00";
+                makeReservation($dateTime, $rPeople, $selectedUserId);
+            } else {
+                $msg = "Sorry we don't have " . $rAskingTables . " available tables at that time! Please try another time";
+                phpAlert($msg);
+            }
+        } else {
+            $msg = "We don't work on " . $dayName . "s. Please try another day";
+            phpAlert($msg);
+
+        }
+    } catch (Exception $e) {
+        echo $e;
+    }
+}
+
+function getAskingTablesNum($people, $seats)
+{
+    if ($people % $seats > 0) {
+        return ($people / $seats) + 1;
+    } else {
+        return ($people / $seats);
+    }
+}
+
 
 function checkTime()
 {
@@ -44,14 +104,12 @@ function checkTime()
 
     $msg = "";
     if (checkWorkingDay($dayName) == 1) {
-        $msg ="We have " . ($tables - $avalaibleTables) . " tables (x" . $seats . " person) available for " . $dayName . " " . $checkDate . " at  " . $checkTime;
+        $msg = "We have " . ($tables - $avalaibleTables) . " tables (x" . $seats . " person) available for " . $dayName . " " . $checkDate . " at  " . $checkTime;
     } else {
-        $msg =  "We don't work on " . $dayName . "s. Please try another day";
+        $msg = "We don't work on " . $dayName . "s. Please try another day";
     }
 
     phpAlert($msg);
-
-
 }
 
 function checkWorkingDay($day)
@@ -173,6 +231,7 @@ function fillCustomerList()
         if (!empty($conn)) {
             $data = $conn->query($sql)->fetchAll();
 
+            echo "";
             foreach ($data as $row) {
                 echo "<option value='" . $row['UserId'] . "'>" . $row['Firstname'] . " " . $row['Lastname'] . " (" . $row['Email'] . ")" . "</option>";
             }
@@ -188,6 +247,7 @@ function phpAlert($msg)
 {
     echo '<script type="text/javascript">alert("' . $msg . '")</script>';
 }
+
 ?>
 
 <!doctype html>
@@ -254,6 +314,7 @@ function phpAlert($msg)
                 <div class="form-group">
                     <label for="customer">Customer:</label>
                     <select name="customer" class="form-control" size="1">
+                        <option hidden disabled selected value> -- Select a customer --</option>
                         <?php
                         fillCustomerList();
                         ?>
@@ -287,15 +348,6 @@ function phpAlert($msg)
                 <div class="form-group">
                     <input type="submit" name="submit" class="btn btn-primary" value="Reserve">
                 </div>
-
-
-                <!--                    &nbsp;-->
-                <!--                    <input type="submit" name="checkTime" value="Check">-->
-                <!--                    &nbsp;-->
-                <!--                    <p>Please check time before fill in the fields</p>-->
-                <!--                    <br>-->
-                <!--                    <br>-->
-                <!--                    <br>-->
 
             </form>
         </main>

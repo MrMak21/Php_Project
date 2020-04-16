@@ -192,9 +192,9 @@ function changeConfigs()
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="adminDashboard.php">
                             <span data-feather="users"></span>
-                            Customers
+                            Configuration
                         </a>
                     </li>
                 </ul>

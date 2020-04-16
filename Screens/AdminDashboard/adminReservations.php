@@ -13,6 +13,11 @@ if (!isset($_SESSION['userId'])) {
     }
 }
 
+function phpAlert($msg)
+{
+    echo '<script type="text/javascript">alert("' . $msg . '")</script>';
+}
+
 
 
 
@@ -20,6 +25,7 @@ function showReservations($date) {
     try {
         require 'DbConnect.php';
         $sql = "SELECT * FROM Reservation inner join Users on Reservation.UserId = Users.UserId WHERE Reservation.Date >= '" . $date . " 00:00:00' and Reservation.Date <= '" . $date ." 23:59:59'";
+
 
         if (!empty($conn)) {
             $data = $conn->query($sql)->fetchAll();
@@ -32,6 +38,7 @@ function showReservations($date) {
                 echo "<td>" . $row['Lastname'] . "</td>";
                 echo "<td>" . $row['Date'] . "</td>";
                 echo "<td>" . $row['NumOfPeople'] . "</td>";
+                echo "<td>" . $row['TableNo'] . "</td>";
                 echo "</tr>";
                 $i++;
             }
@@ -47,6 +54,7 @@ function showAll()
         require 'DbConnect.php';
         $sql = "SELECT * FROM Reservation inner join Users on Reservation.UserId = Users.UserId";
 
+
         if (!empty($conn)) {
             $data = $conn->query($sql)->fetchAll();
             $i = 1;
@@ -58,6 +66,7 @@ function showAll()
                 echo "<td>" . $row['Lastname'] . "</td>";
                 echo "<td>" . $row['Date'] . "</td>";
                 echo "<td>" . $row['NumOfPeople'] . "</td>";
+                echo "<td>" . $row['TableNo'] . "</td>";
                 echo "</tr>";
                 $i++;
             }
@@ -118,9 +127,9 @@ function showAll()
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="adminDashboard.php">
                             <span data-feather="users"></span>
-                            Customers
+                            Configuration
                         </a>
                     </li>
                 </ul>
@@ -158,7 +167,12 @@ function showAll()
 
                 <?php  if (isset($_POST['show'])) {
                     $date = $_POST['date'];
-                    showReservations($date);
+                    if ($date == NULL) {
+                        $msg = "Please select date";
+                        phpAlert($msg);
+                    } else {
+                        showReservations($date);
+                    }
                 } else if (isset($_POST['showAll'])) {
                     $date = $_POST['date'];
                     showAll();

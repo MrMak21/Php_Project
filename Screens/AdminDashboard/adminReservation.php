@@ -35,7 +35,6 @@ function validateReservetion()
         $selectedUserId = $_POST['customer'];
 
 
-
         $rAskingTables = getAskingTablesNum($rPeople, $totalSeats);
 
         $ftimestamp = strtotime($rTime) + 60 * 60 * 2;
@@ -45,28 +44,53 @@ function validateReservetion()
         $previousTime = date('H:i', $ptimestamp);
         $dayName = date("l", strtotime($rDate));
 
-        $availableTablesSql = "SELECT COUNT(*) as `total` FROM `Reservation` WHERE (Reservation.Date >= '" . $rDate . " " . $previousTime . ":00')" . " and (Reservation.Date <= '" . $rDate . " " . $forwardTime . ":00')";
+        $availableTablesSql = "SELECT SUM(Reservation.TableNo) as `total` FROM `Reservation` WHERE (Reservation.Date >= '" . $rDate . " " . $previousTime . ":00')" . " and (Reservation.Date <= '" . $rDate . " " . $forwardTime . ":00')";
 
         $reservedTables = getAvailableTables($availableTablesSql);
         $avalaibleTables = $totalTables - $reservedTables;
 
         $isWorkingDate = checkWorkingDay($dayName);
 
+        $isWorkingHours = checkWorkingHours($rTime);
 
         $msg = "";
-        if ($isWorkingDate == 1) {
-            if ($avalaibleTables > $rAskingTables) {
-                //Do the reservation
-                $dateTime = $rDate . " " . $rTime . ":00";
-                makeReservation($dateTime, $rPeople, $selectedUserId);
+        if ($selectedUserId != NULL) {
+            if ($rDate != NULL) {
+                if ($rTime != NULL) {
+                    if ($rPeople != NULL && $rPeople > 0) {
+                        if ($isWorkingDate == 1) {
+                            if ($isWorkingHours == true) {
+                                if ($avalaibleTables >= $rAskingTables) {
+                                    //Do the reservation
+                                    $dateTime = $rDate . " " . $rTime . ":00";
+                                    makeReservation($dateTime, $rPeople, $selectedUserId, $rAskingTables);
+                                } else {
+                                    $msg = "Sorry we don't have " . $rAskingTables . " available tables at that time! Please try another time";
+                                    phpAlert($msg);
+                                }
+                            } else {
+                                $msg = "We don't work at that time. Please select a valid time";
+                                phpAlert($msg);
+                            }
+                        } else {
+                            $msg = "We don't work on " . $dayName . "s. Please try another day";
+                            phpAlert($msg);
+                        }
+                    } else {
+                        $msg = "Please add people to make reservation";
+                        phpAlert($msg);
+                    }
+                } else {
+                    $msg = "Please select time to make reservation";
+                    phpAlert($msg);
+                }
             } else {
-                $msg = "Sorry we don't have " . $rAskingTables . " available tables at that time! Please try another time";
+                $msg = "Please select a date to make reservation";
                 phpAlert($msg);
             }
         } else {
-            $msg = "We don't work on " . $dayName . "s. Please try another day";
+            $msg = "Please select a customer to make reservation";
             phpAlert($msg);
-
         }
     } catch (Exception $e) {
         echo $e;
@@ -76,9 +100,39 @@ function validateReservetion()
 function getAskingTablesNum($people, $seats)
 {
     if ($people % $seats > 0) {
-        return ($people / $seats) + 1;
+        return (int)($people / $seats) + 1;
     } else {
         return ($people / $seats);
+    }
+}
+
+function checkWorkingHours($time)
+{
+
+    $sql = "Select * from Config";
+    $open = "";
+    $close = "";
+    try {
+        require 'DbConnect.php';
+
+
+        if (!empty($conn)) {
+            $data = $conn->query($sql)->fetchAll();
+            foreach ($data as $row) {
+                $open = $row['OpenHour'];
+                $close = $row['CloseHour'];
+
+            }
+
+            if (strtotime($time) >= strtotime($open) && strtotime($time) <= strtotime($close)) {
+                return true;
+            } else {
+                return false;
+            }
+
+        }
+    } catch (PDOException $e) {
+        echo $e->getMessage();
     }
 }
 
@@ -201,7 +255,7 @@ function getSeats()
     return $seats;
 }
 
-function makeReservation($date, $people, $selectedUserId)
+function makeReservation($date, $people, $selectedUserId, $askingTables)
 {
     try {
         require 'DbConnect.php';
@@ -209,9 +263,9 @@ function makeReservation($date, $people, $selectedUserId)
         $userId = $_SESSION['userId'];
 
         if ($userType == 1) {
-            $sql = "INSERT INTO `Reservation` (`ReservationId`, `TableNo`, `Date`, `NumOfPeople`, `UserId`, `AdminId`) VALUES (NULL, '1', '$date', '$people', '$selectedUserId', '$userId');";
+            $sql = "INSERT INTO `Reservation` (`ReservationId`, `TableNo`, `Date`, `NumOfPeople`, `UserId`, `AdminId`) VALUES (NULL, $askingTables , '$date', '$people', '$selectedUserId', '$userId');";
         } else {
-            $sql = "INSERT INTO `Reservation` (`ReservationId`, `TableNo`, `Date`, `NumOfPeople`, `UserId`, `AdminId`) VALUES (NULL, '1', '$date', '$people', '$selectedUserId', NULL);";
+            $sql = "INSERT INTO `Reservation` (`ReservationId`, `TableNo`, `Date`, `NumOfPeople`, `UserId`, `AdminId`) VALUES (NULL, $askingTables , '$date', '$people', '$selectedUserId', NULL);";
         }
         if (!empty($conn)) {
             $conn->exec($sql);
@@ -300,9 +354,9 @@ function phpAlert($msg)
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="adminDashboard.php">
                             <span data-feather="users"></span>
-                            Customers
+                            Configuration
                         </a>
                     </li>
                 </ul>

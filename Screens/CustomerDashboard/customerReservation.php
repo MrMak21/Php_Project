@@ -12,49 +12,51 @@ if (!isset($_SESSION['userId'])) {
 //Handle form click buttons
 if (isset($_POST['checkTime'])) {
     checkTime();
-} else if (isset($_POST['submit']) ) {
+} else if (isset($_POST['submit'])) {
     $date = $_POST['date'];
     $time = $_POST['time'];
     $people = $_POST['people'];
 
     $dateTime = $date . " " . $time . ":00";
-    makeReservation($dateTime,$people);
+    validateReservetion();
 } else if (isset($_POST['logout'])) {
     doLogout();
 }
 
-function makeReservation($date,$people) {
+function makeReservation($date, $people, $askingTables)
+{
     try {
         require 'DbConnect.php';
         $userType = $_SESSION['userType'];
         $userId = $_SESSION['userId'];
 
-        $sql = "INSERT INTO `Reservation` (`ReservationId`, `TableNo`, `Date`, `NumOfPeople`, `UserId`, `AdminId`) VALUES (NULL, '1', '$date', '$people', '$userId',NULL);";
+        $sql = "INSERT INTO `Reservation` (`ReservationId`, `TableNo`, `Date`, `NumOfPeople`, `UserId`, `AdminId`) VALUES (NULL, $askingTables, '$date', '$people', '$userId',NULL);";
 
         if (!empty($conn)) {
             $conn->exec($sql);
             header("Location:customerDashboard.php");
         }
-    }catch (PDOException $e) {
+    } catch (PDOException $e) {
         echo $e->getMessage();
     }
 }
 
-function checkTime() {
+function checkTime()
+{
 
     $checkTime = $_POST['time'];
     $checkDate = $_POST['date'];
     $tables = getSumTables();
     $seats = getSeats();
 
-    $ftimestamp = strtotime($checkTime) + 60*60*2;
-    $ptimestamp = strtotime($checkTime) - 60*60*2;
+    $ftimestamp = strtotime($checkTime) + 60 * 60 * 2;
+    $ptimestamp = strtotime($checkTime) - 60 * 60 * 2;
 
-    $forwardTime = date('H:i',$ftimestamp);
-    $previousTime = date('H:i',$ptimestamp);
-    $dayName = date("l",strtotime($checkDate));
+    $forwardTime = date('H:i', $ftimestamp);
+    $previousTime = date('H:i', $ptimestamp);
+    $dayName = date("l", strtotime($checkDate));
 
-    $sql = "SELECT COUNT(*) as `total` FROM `Reservation` WHERE (Reservation.Date >= '" . $checkDate . " " . $previousTime . ":00')" . " and (Reservation.Date <= '" . $checkDate . " " . $forwardTime .":00')";
+    $sql = "SELECT COUNT(*) as `total` FROM `Reservation` WHERE (Reservation.Date >= '" . $checkDate . " " . $previousTime . ":00')" . " and (Reservation.Date <= '" . $checkDate . " " . $forwardTime . ":00')";
 
     $avalaibleTables = getAvailableTables($sql);
 
@@ -69,7 +71,116 @@ function checkTime() {
     phpAlert($msg);
 }
 
-function checkWorkingDay($day) {
+function validateReservetion()
+{
+
+    try {
+        $rTime = $_POST['time'];
+        $rDate = $_POST['date'];
+        $rPeople = $_POST['people'];
+        $totalTables = getSumTables();
+        $totalSeats = getSeats();
+
+
+        $rAskingTables = getAskingTablesNum($rPeople, $totalSeats);
+
+        $ftimestamp = strtotime($rTime) + 60 * 60 * 2;
+        $ptimestamp = strtotime($rTime) - 60 * 60 * 2;
+
+        $forwardTime = date('H:i', $ftimestamp);
+        $previousTime = date('H:i', $ptimestamp);
+        $dayName = date("l", strtotime($rDate));
+
+        $availableTablesSql = "SELECT SUM(Reservation.TableNo) as `total` FROM `Reservation` WHERE (Reservation.Date >= '" . $rDate . " " . $previousTime . ":00')" . " and (Reservation.Date <= '" . $rDate . " " . $forwardTime . ":00')";
+
+        $reservedTables = getAvailableTables($availableTablesSql);
+        $avalaibleTables = $totalTables - $reservedTables;
+
+        $isWorkingDate = checkWorkingDay($dayName);
+
+        $isWorkingHours = checkWorkingHours($rTime);
+
+        $msg = "";
+        if ($rDate != NULL) {
+            if ($rTime != NULL) {
+                if ($rPeople != NULL && $rPeople > 0) {
+                    if ($isWorkingDate == 1) {
+                        if ($isWorkingHours == true) {
+                            if ($avalaibleTables >= $rAskingTables) {
+                                //Do the reservation
+                                $dateTime = $rDate . " " . $rTime . ":00";
+                                makeReservation($dateTime, $rPeople, $rAskingTables);
+                            } else {
+                                $msg = "Sorry we don't have " . $rAskingTables . " available tables at that time! Please try another time";
+                                phpAlert($msg);
+                            }
+                        } else {
+                            $msg = "We don't work at that time. Please select a valid time";
+                            phpAlert($msg);
+                        }
+                    } else {
+                        $msg = "We don't work on " . $dayName . "s. Please try another day";
+                        phpAlert($msg);
+                    }
+                } else {
+                    $msg = "Please add people to make reservation";
+                    phpAlert($msg);
+                }
+            } else {
+                $msg = "Please select time to make reservation";
+                phpAlert($msg);
+            }
+        } else {
+            $msg = "Please select a date to make reservation";
+            phpAlert($msg);
+        }
+    } catch (Exception $e) {
+        echo $e;
+    }
+}
+
+function checkWorkingHours($time)
+{
+
+    $sql = "Select * from Config";
+    $open = "";
+    $close = "";
+    try {
+        require 'DbConnect.php';
+
+
+        if (!empty($conn)) {
+            $data = $conn->query($sql)->fetchAll();
+            foreach ($data as $row) {
+                $open = $row['OpenHour'];
+                $close = $row['CloseHour'];
+
+            }
+
+            if (strtotime($time) >= strtotime($open) && strtotime($time) <= strtotime($close)) {
+                return true;
+            } else {
+                return false;
+            }
+
+        }
+    } catch (PDOException $e) {
+        echo $e->getMessage();
+    }
+}
+
+
+function getAskingTablesNum($people, $seats)
+{
+    if ($people % $seats > 0) {
+        return (int)($people / $seats) + 1;
+    } else {
+        return ($people / $seats);
+    }
+}
+
+function checkWorkingDay($day)
+{
     $sql = "Select $day from Config";
     $res = 0;
 
@@ -84,7 +195,7 @@ function checkWorkingDay($day) {
             }
 
         }
-    }catch (PDOException $e) {
+    } catch (PDOException $e) {
         echo $e->getMessage();
     }
     return $res;
@@ -92,7 +203,8 @@ function checkWorkingDay($day) {
 }
 
 
-function getAvailableTables($sql) {
+function getAvailableTables($sql)
+{
 
     $total = 0;
     try {
@@ -105,14 +217,15 @@ function getAvailableTables($sql) {
             }
 
         }
-    }catch (PDOException $e) {
+    } catch (PDOException $e) {
         echo $e->getMessage();
     }
 
     return $total;
 }
 
-function getSumTables() {
+function getSumTables()
+{
     $tables = 0;
     try {
         require 'DbConnect.php';
@@ -122,11 +235,11 @@ function getSumTables() {
             $data = $conn->query($sql)->fetchAll();
 
             foreach ($data as $row) {
-                $tables =  $row['NumOfTables'];
+                $tables = $row['NumOfTables'];
             }
 
         }
-    }catch (PDOException $e) {
+    } catch (PDOException $e) {
         echo $e->getMessage();
     }
 
@@ -155,7 +268,8 @@ function getSeats()
     return $seats;
 }
 
-function doLogout() {
+function doLogout()
+{
     session_destroy();
     header("Location:login.php");
     exit();
@@ -165,8 +279,8 @@ function phpAlert($msg)
 {
     echo '<script type="text/javascript">alert("' . $msg . '")</script>';
 }
-?>
 
+?>
 
 
 <!doctype html>
@@ -181,7 +295,8 @@ function phpAlert($msg)
     <title>New Reservation</title>
 
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
     <!-- Custom styles for this template -->
     <link href="admin_dashboard.css" rel="stylesheet">
@@ -221,15 +336,15 @@ function phpAlert($msg)
         </nav>
 
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
-            <form  action="<?php htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+            <form action="<?php htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                 <div class="form-group">
                     <label for="date">Date:</label>
-                    <input type="date" name="date" class="form-control" value="<?php echo $_POST['date'];?>">
+                    <input type="date" name="date" class="form-control" value="<?php echo $_POST['date']; ?>">
                 </div>
 
                 <div class="form-group">
                     <label for="time">Time:</label>
-                    <input type="time" id="time" class="form-control" name="time" value="<?php echo $_POST['time'];?>">
+                    <input type="time" id="time" class="form-control" name="time" value="<?php echo $_POST['time']; ?>">
                 </div>
 
                 <div class="form-group">
@@ -242,7 +357,7 @@ function phpAlert($msg)
 
                 <div class="form-group">
                     <label for="people">Number of people:</label>
-                    <input type="number" name="people" class="form-control" value="<?php echo $_POST['people'];?>">
+                    <input type="number" name="people" class="form-control" value="<?php echo $_POST['people']; ?>">
                 </div>
 
                 <div class="form-group">

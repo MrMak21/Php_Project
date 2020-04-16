@@ -344,7 +344,7 @@ function phpAlert($msg)
                     <li class="nav-item">
                         <a class="nav-link active" href="adminReservation.php">
                             <span data-feather="home"></span>
-                            Create new Reservation <span class="sr-only">(current)</span>
+                            New Reservation <span class="sr-only">(current)</span>
                         </a>
                     </li>
                     <li class="nav-item">

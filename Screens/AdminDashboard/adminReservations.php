@@ -115,13 +115,13 @@ function showAll()
             <div class="sidebar-sticky">
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link active" href="adminReservation.php">
+                        <a class="nav-link" href="adminReservation.php">
                             <span data-feather="home"></span>
-                            Create new Reservation <span class="sr-only">(current)</span>
+                            New Reservation <span class="sr-only">(current)</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="adminReservations.php">
+                        <a class="nav-link active" href="adminReservations.php">
                             <span data-feather="file"></span>
                             Reservations
                         </a>

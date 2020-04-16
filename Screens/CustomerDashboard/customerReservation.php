@@ -320,13 +320,13 @@ function phpAlert($msg)
             <div class="sidebar-sticky">
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link active" href="customerDashboard.php">
+                        <a class="nav-link" href="customerDashboard.php">
                             <span data-feather="home"></span>
                             Dashboard <span class="sr-only">(current)</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="customerReservation.php">
+                        <a class="nav-link active" href="customerReservation.php">
                             <span data-feather="file"></span>
                             New Reservation
                         </a>

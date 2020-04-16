@@ -255,6 +255,49 @@ function getSeats()
     return $seats;
 }
 
+
+function getOpenHour() {
+    $sql = "Select * from Config";
+    $open = "";
+    try {
+        require 'DbConnect.php';
+
+
+        if (!empty($conn)) {
+            $data = $conn->query($sql)->fetchAll();
+            foreach ($data as $row) {
+                $open = $row['OpenHour'];
+            }
+            echo date('H:i', strtotime($open));
+
+
+        }
+    } catch (PDOException $e) {
+        echo $e->getMessage();
+    }
+}
+
+function getCloseHour() {
+    $sql = "Select * from Config";
+    $close = "";
+    try {
+        require 'DbConnect.php';
+
+
+        if (!empty($conn)) {
+            $data = $conn->query($sql)->fetchAll();
+            foreach ($data as $row) {
+                $close = $row['CloseHour'];
+            }
+            echo date('H:i', strtotime($close));
+
+
+        }
+    } catch (PDOException $e) {
+        echo $e->getMessage();
+    }
+}
+
 function makeReservation($date, $people, $selectedUserId, $askingTables)
 {
     try {
@@ -382,8 +425,8 @@ function phpAlert($msg)
 
                 <div class="form-group">
                     <label for="time">Time:</label>
-                    <input type="time" id="time" name="time" class="form-control"
-                           value="<?php echo $_POST['time']; ?>">
+                    <input type="time" id="time" name="time" min="<?php getOpenHour() ?>" max="<?php getCloseHour(); ?>" class="form-control" value="<?php echo $_POST['time']; ?>">
+                    <small>Working hours are <?php getOpenHour(); ?>am to <?php getCloseHour();?>pm</small>
                 </div>
 
                 <div class="form-group">

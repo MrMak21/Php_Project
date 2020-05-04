@@ -36,6 +36,7 @@ function showPastReservations()
                 echo "<td>" . $row['Lastname'] . "</td>";
                 echo "<td>" . $row['Date'] . "</td>";
                 echo "<td>" . $row['NumOfPeople'] . "</td>";
+                echo "<td>" . $row['TableNo'] . "</td>";
                 echo "</tr>";
                 $i++;
             }
@@ -66,6 +67,7 @@ function showFutureReservations()
                 echo "<td>" . $row['Lastname'] . "</td>";
                 echo "<td>" . $row['Date'] . "</td>";
                 echo "<td>" . $row['NumOfPeople'] . "</td>";
+                echo "<td>" . $row['TableNo'] . "</td>";
                 echo "</tr>";
                 $i++;
             }

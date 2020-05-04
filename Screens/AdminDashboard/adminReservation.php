@@ -157,10 +157,18 @@ function checkTime()
     $avalaibleTables = getAvailableTables($sql);
 
     $msg = "";
-    if (checkWorkingDay($dayName) == 1) {
-        $msg = "We have " . ($tables - $avalaibleTables) . " tables (x" . $seats . " person) available for " . $dayName . " " . $checkDate . " at  " . $checkTime;
+    if ($checkDate != null) {
+        if ($checkTime != null) {
+            if (checkWorkingDay($dayName) == 1) {
+                $msg = "We have " . ($tables - $avalaibleTables) . " tables (x" . $seats . " person) available for " . $dayName . " " . $checkDate . " at  " . $checkTime;
+            } else {
+                $msg = "We don't work on " . $dayName . "s. Please try another day";
+            }
+        } else {
+            $msg = "Please select time";
+        }
     } else {
-        $msg = "We don't work on " . $dayName . "s. Please try another day";
+        $msg = "Please select date";
     }
 
     phpAlert($msg);

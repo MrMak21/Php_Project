@@ -62,10 +62,18 @@ function checkTime()
 
 
     $msg = "";
-    if (checkWorkingDay($dayName) == 1) {
-        $msg = "We have " . ($tables - $avalaibleTables) . " tables (x" . $seats . " person) available for " . $dayName . " " . $checkDate . " at  " . $checkTime;
+    if ($checkDate != null) {
+        if ($checkTime != null) {
+            if (checkWorkingDay($dayName) == 1) {
+                $msg = "We have " . ($tables - $avalaibleTables) . " tables (x" . $seats . " person) available for " . $dayName . " " . $checkDate . " at  " . $checkTime;
+            } else {
+                $msg = "We don't work on " . $dayName . "s. Please try another day";
+            }
+        } else {
+            $msg = "Please select time";
+        }
     } else {
-        $msg = "We don't work on " . $dayName . "s. Please try another day";
+        $msg = "Please select date";
     }
 
     phpAlert($msg);
@@ -139,7 +147,8 @@ function validateReservetion()
     }
 }
 
-function getOpenHour() {
+function getOpenHour()
+{
     $sql = "Select * from Config";
     $open = "";
     try {
@@ -160,7 +169,8 @@ function getOpenHour() {
     }
 }
 
-function getCloseHour() {
+function getCloseHour()
+{
     $sql = "Select * from Config";
     $close = "";
     try {
@@ -386,8 +396,9 @@ function phpAlert($msg)
 
                 <div class="form-group">
                     <label for="time">Time:</label>
-                    <input type="time" id="time" class="form-control" min="<?php getOpenHour() ?>" max="<?php getCloseHour(); ?>" name="time" value="<?php echo $_POST['time']; ?>">
-                    <small>Working hours are <?php getOpenHour(); ?>am to <?php getCloseHour();?>pm</small>
+                    <input type="time" id="time" class="form-control" min="<?php getOpenHour() ?>"
+                           max="<?php getCloseHour(); ?>" name="time" value="<?php echo $_POST['time']; ?>">
+                    <small>Working hours are <?php getOpenHour(); ?>am to <?php getCloseHour(); ?>pm</small>
                 </div>
 
                 <div class="form-group">
